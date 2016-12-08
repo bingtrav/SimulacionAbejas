@@ -1,6 +1,7 @@
 breed [ sites site ]
 breed [ scouts scout ]
 breed [ zanganos zangano]
+breed [queens queen]
 
 sites-own [
   quality discovered?
@@ -33,10 +34,18 @@ scouts-own [
                    ;   a bee which direction to turn.
   temp-x-dance     ; initial position of a dance
   temp-y-dance
+  hungry
 ]
 zanganos-own[
   my-home
   speed
+  hungry
+]
+
+queens-own[
+  my-home
+  speed
+  hungry
 ]
 
 globals [
@@ -61,6 +70,7 @@ globals [
   pipe-task
   take-off-task
   resources ;Resource
+  resource-plus
 ]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -71,9 +81,10 @@ to setup
   setup-hives
   setup-tasks
   setup-bees
-  set show-dance-path? true
+  set show-dance-path? false
   set scouts-visible? true
   set resources 0
+  set resource-plus 3
   reset-ticks
 end
 
@@ -129,6 +140,14 @@ to setup-bees
     set speed random-float 50
 
     ]
+  create-queens 1 [
+    fd random-float 4 ; let bees spread out from the center
+    set my-home patch-here
+    set shape "bee"
+    set color blue
+    set speed random-float 50
+    set size 3
+  ]
   ; assigning some of the scouts to be initial scouts.
   ; bee-timer here determines how long they will wait
   ; before starting initial exploration
@@ -335,7 +354,7 @@ to go-home
           set next-task dance-task
           set task-string "dancing"
           set bee-timer 0
-          set resources resources + 1
+          set resources resources + resource-plus
         ]
       ]
     ] [
@@ -483,7 +502,8 @@ to go
     stop
   ]
   ask scouts [ run next-task ]
-  ask zanganos [move-around]
+  ask zanganos [move-circle]
+  ask queens [move-circle]
   tick
 end
 
@@ -547,6 +567,11 @@ end
 to move-around
   rt (random 60 - random 60) fd random-float .1
   if distancexy 0 0 > 4 [facexy 0 0 fd 1]
+end
+
+to move-circle
+  fd (pi * 2.5 / 180) * (speed / 50)
+  rt speed / 50
 end
 
 
