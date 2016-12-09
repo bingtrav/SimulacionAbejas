@@ -1,5 +1,6 @@
 breed [ sites site ]
 breed [ scouts scout ]
+breed [ zanganos zangano]
 
 sites-own [
   quality discovered?
@@ -35,6 +36,10 @@ scouts-own [
 
   bee-life         ; a timer keeping track of the length of its current life
 ]
+zanganos-own[
+  my-home
+  speed
+]
 
 globals [
   color-list       ; colors for hives, which keeps consistency among the hive colors, plot
@@ -57,6 +62,7 @@ globals [
   re-visit-task
   pipe-task
   take-off-task
+  resources ;Resource
 ]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -69,6 +75,7 @@ to setup
   setup-bees
   set show-dance-path? true
   set scouts-visible? true
+  set resources 0
   reset-ticks
 end
 
@@ -94,12 +101,6 @@ to setup-hives
       set quality item i quality-list
       set label quality
     ]
-    set-current-plot "on-site"
-    create-temporary-plot-pen word "site" i
-    set-plot-pen-color item i color-list
-    set-current-plot "committed"
-    create-temporary-plot-pen word "target" i
-    set-plot-pen-color item i color-list
     set i i + 1
   ]
 end
@@ -119,6 +120,14 @@ to setup-bees
     set next-task watch-dance-task
     set task-string "watching-dance"
   ]
+  create-zanganos 50 [
+    fd random-float 4 ; let bees spread out from the center
+    set my-home patch-here
+    set shape "bee"
+    set color red
+    set speed random-float 50
+
+    ]
   ; assigning some of the scouts to be initial scouts.
   ; bee-timer here determines how long they will wait
   ; before starting initial exploration
@@ -217,8 +226,8 @@ end
 to discover
   set discover-task task [
     ifelse bee-timer < 0 [
-      ; if run out of time (a bee has limited time to make initial
-      ; discovery), go home, and admit no discovery was made
+      ; if run out of time (a bee has limited time to make initial discovery),
+      ; home, and admit no discovery was made
       set next-task go-home-task
       set task-string "going-home"
       set no-discovery? true
@@ -325,6 +334,7 @@ to go-home
           set next-task dance-task
           set task-string "dancing"
           set bee-timer 0
+          set resources resources + 1
         ]
       ]
     ] [
@@ -472,7 +482,7 @@ to go
     stop
   ]
   ask scouts [ run next-task ]
-  plot-on-site-scouts
+  ask zanganos [move-around]
   tick
 end
 
@@ -538,21 +548,6 @@ to move-around
   if distancexy 0 0 > 4 [facexy 0 0 fd 1]
 end
 
-to plot-on-site-scouts
-  let i 0
-  repeat count sites [
-    set-current-plot "on-site"
-    set-current-plot-pen word "site" i
-    plot count scouts with [on-site? and target = site i]
-
-    set-current-plot "committed"
-    set-current-plot-pen word "target" i
-    plot count scouts with [target = site i]
-
-    set i i + 1
-  ]
-end
-
 to show-hide-dance-path
   if show-dance-path? [
     clear-drawing
@@ -595,17 +590,17 @@ GRAPHICS-WINDOW
 32
 -24
 24
-0
-0
+1
+1
 1
 ticks
 120.0
 
 BUTTON
 5
-220
+190
 201
-256
+226
 Setup
 setup
 NIL
@@ -620,9 +615,9 @@ NIL
 
 BUTTON
 5
-265
+235
 200
-305
+275
 Go
 go
 T
@@ -644,7 +639,7 @@ hive-number
 hive-number
 4
 10
-7
+10
 1
 1
 NIL
@@ -659,7 +654,7 @@ initial-percentage
 initial-percentage
 5
 25
-22
+12
 1
 1
 NIL
@@ -684,27 +679,10 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot count scouts with [piping?]"
 
 PLOT
-942
-222
-1252
-426
-on-site
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-
-PLOT
-942
-426
-1252
-579
+940
+10
+1250
+205
 watching v.s. working
 NIL
 NIL
@@ -719,22 +697,6 @@ PENS
 "watching bees" 1.0 0 -1398087 true "" "plot count scouts with [task-string = \"watching-dance\"]"
 "working bees" 1.0 0 -7025278 true "" "plot count scouts - count scouts with [task-string = \"watching-dance\"]"
 
-PLOT
-942
-10
-1252
-222
-committed
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
 
 SLIDER
 5
@@ -753,9 +715,9 @@ HORIZONTAL
 
 BUTTON
 5
-315
+305
 200
-355
+345
 Show/Hide Dance Path
 show-hide-dance-path
 NIL
@@ -770,9 +732,9 @@ NIL
 
 BUTTON
 5
-360
+350
 200
-400
+390
 Show/Hide Scouts
 show-hide-scouts
 NIL
@@ -794,26 +756,29 @@ quorum
 quorum
 0
 50
-38
+33
 1
 1
 NIL
 HORIZONTAL
 
-SLIDER
-5
-170
-200
-203
-simulation
-simulation
-1000
-2500
-500
-100
-1
-NIL
-HORIZONTAL
+PLOT
+940
+220
+1250
+415
+Resources
+Time
+Honey
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot resources"
 
 @#$#@#$#@
 ## WHAT IS IT?

@@ -1,0 +1,18 @@
+=== Proyecto de Paradigmas ===
+=== To Do List ===
+
+- Ciclo de vida: Las abejas tienen que remplazarse a X cantidad de ticks + - una desviación estandar. 
+ - Cambio de color conforme a la "edad"  
+- Zanganos: Sólo se mueven alrededor o entre la colonia y se utiliza su número para calcular los recursos que se consumen (si hay muy pocos recursos se comienza a dismnuir el número de zanganos). 
+- Reina: solo está presente.
+- Recursos de la colonia.
+    - Reservas
+    - Recolectar 
+    - Consumo
+- Nuevos parámetros
+ - Cantidad de recursos iniciales
+ - Cantidad de obreras y zanganos in
+- Mostrar los datos relevantes en la pantalla
+ - Cantidad de recursos a lo largo del tiempo
+ - Número de abejas a lo largo del tiempo
+
