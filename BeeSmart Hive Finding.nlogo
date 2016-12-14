@@ -34,8 +34,12 @@ scouts-own [
                    ;   a bee which direction to turn.
   temp-x-dance     ; initial position of a dance
   temp-y-dance
-  bee-life         ; a timer keeping track of the length of its current life
   hungry
+
+  ; Life variables
+  bee-life         ; a timer keeping track of the length of its current life
+  alive?           ; true if it's alive, false if it isn't alive yet
+  born-chance
 ]
 zanganos-own[
   my-home
@@ -73,8 +77,9 @@ globals [
   resources ;Resource
   resource-plus
 
-  population       ; It counts how many bees are
-  simulation-ticks ; It contains how many ticks will have the simulation
+  next-turtle       ; Indicates who next come to be alive
+  population        ; It counts how many bees are
+  simulation-number ; It contains how many ticks will have the simulation
 ]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -121,11 +126,27 @@ end
 
 to setup-simulation
   set population count scouts
-  set simulation-ticks simulation-number
+  set simulation-number simulation-ticks
 end
 
 to setup-bees
-  create-scouts 100 [
+  create-zanganos 50 [
+    fd random-float 4 ; let bees spread out from the center
+    set my-home patch-here
+    set shape "bee"
+    set color red
+    set speed random-float 40
+
+    ]
+  create-queens 1 [
+    fd random-float 4 ; let bees spread out from the center
+    set my-home patch-here
+    set shape "bee"
+    set color blue
+    set speed random-float 60
+    set size 3
+  ]
+  create-scouts 350 [
     fd random-float 4 ; let bees spread out from the center
     set my-home patch-here
     set shape "bee"
@@ -138,22 +159,8 @@ to setup-bees
     set piping? false
     set next-task watch-dance-task
     set task-string "watching-dance"
-  ]
-  create-zanganos 50 [
-    fd random-float 4 ; let bees spread out from the center
-    set my-home patch-here
-    set shape "bee"
-    set color red
-    set speed random-float 50
 
-    ]
-  create-queens 1 [
-    fd random-float 4 ; let bees spread out from the center
-    set my-home patch-here
-    set shape "bee"
-    set color blue
-    set speed random-float 50
-    set size 3
+    set born-chance 35
   ]
   ; assigning some of the scouts to be initial scouts.
   ; bee-timer here determines how long they will wait
@@ -161,9 +168,24 @@ to setup-bees
   ask n-of (initial-percentage) scouts [
     set initial-scout? true
     set bee-timer random 100
-    set bee-life random 1000 + 200
   ]
+
+  ask scouts [
+    ifelse who < 162
+  [
+    set alive? true
+    set hidden? false
+  ]
+  [
+    set alive? false
+    set hidden? true
+  ]
+
+    set bee-life random 400 + 200
+  ]
+
   set population count scouts + count zanganos + count queens
+  set next-turtle (population + 1)
 end
 
 
@@ -505,14 +527,47 @@ end
 ;;;;;;;;;;;;;;run-time;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 to go
-  if all? scouts [ on-site? ] and length remove-duplicates [ target ] of scouts = 1 [
+  ;if all? scouts [ on-site? ] and length remove-duplicates [ target ] of scouts = 1 [
   ; if all scouts are on site, and they all have the same target hive, stop.
-    stop
+  ;  stop
+  ;]
+  ask scouts [
+    if alive?
+    [
+      run next-task
+    ]
   ]
-  ask scouts [ run next-task ]
   ask zanganos [move-circle]
   ask queens [move-circle]
   tick
+
+  ask scouts [
+    if alive? and bee-life < ticks
+    [
+      set alive? false
+      set hidden? true
+      set population (population - 1)
+    ]
+    if who = next-turtle
+    [
+      print who
+      if born-chance < random 100
+      [
+        set bee-life (bee-life + ticks)
+        set alive? true
+        set hidden? false
+        if hidden? [print "se muestra"]
+        set next-turtle (next-turtle + 1)
+        set population (population + 1)
+        print "[debug] New bee"
+      ]
+    ]
+  ]
+
+  if (simulation-number - 1) < ticks [
+    print "[debug] STOP SIMULATION"
+    stop
+  ]
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -604,13 +659,13 @@ end
 ; See Info tab for full copyright and license.
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-935
-580
+219
+2
+950
+577
 32
 24
-11.0
+11.102041
 1
 10
 1
@@ -631,10 +686,10 @@ ticks
 120.0
 
 BUTTON
-5
-210
-201
-246
+10
+370
+206
+406
 Setup
 setup
 NIL
@@ -648,10 +703,10 @@ NIL
 1
 
 BUTTON
-5
-255
-200
-295
+10
+415
+205
+455
 Go
 go
 T
@@ -665,25 +720,25 @@ NIL
 0
 
 SLIDER
-5
 10
-201
-43
+20
+206
+53
 hive-number
 hive-number
 4
 10
-7
+6
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-5
-50
-201
-83
+10
+60
+206
+93
 initial-percentage
 initial-percentage
 5
@@ -695,28 +750,10 @@ NIL
 HORIZONTAL
 
 PLOT
-5
-415
-201
-579
-piping-scouts
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot count scouts with [piping?]"
-
-PLOT
-940
+965
 10
-1250
-205
+1275
+180
 Buscadoras vs Recolectoras
 NIL
 NIL
@@ -732,10 +769,10 @@ PENS
 "working bees" 1.0 0 -7025278 true "" "plot count scouts - count scouts with [task-string = \"watching-dance\"]"
 
 SLIDER
-5
-90
-201
-123
+10
+100
+206
+133
 initial-explore-time
 initial-explore-time
 100
@@ -747,10 +784,10 @@ NIL
 HORIZONTAL
 
 BUTTON
-5
-305
-200
-345
+10
+465
+205
+505
 Show/Hide Dance Path
 show-hide-dance-path
 NIL
@@ -763,28 +800,11 @@ NIL
 NIL
 0
 
-BUTTON
-5
-350
-200
-390
-Show/Hide Scouts
-show-hide-scouts
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
 SLIDER
-5
-130
-200
-163
+10
+140
+205
+173
 quorum
 quorum
 0
@@ -796,10 +816,10 @@ NIL
 HORIZONTAL
 
 PLOT
-940
-210
-1250
-405
+965
+185
+1275
+350
 Resources
 Time
 Honey
@@ -814,25 +834,25 @@ PENS
 "default" 1.0 0 -16777216 true "" "plot resources"
 
 SLIDER
-5
-170
-202
-203
-simulation-number
-simulation-number
+10
+180
+207
+213
+simulation-ticks
+simulation-ticks
 1000
 2500
-1700
+1100
 100
 1
 NIL
 HORIZONTAL
 
 PLOT
-940
-410
-1250
-575
+965
+355
+1275
+520
 Population
 Time
 Bees
@@ -845,6 +865,51 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot population"
+
+SLIDER
+10
+220
+205
+253
+resources-units
+resources-units
+100
+500
+200
+5
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+260
+205
+293
+scout-bees
+scout-bees
+20
+50
+35
+5
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+300
+205
+333
+drone-bees
+drone-bees
+2
+10
+4
+2
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
