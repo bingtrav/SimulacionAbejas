@@ -130,13 +130,12 @@ to setup-simulation
 end
 
 to setup-bees
-  create-zanganos 50 [
+  create-zanganos drone-bees [
     fd random-float 4 ; let bees spread out from the center
     set my-home patch-here
     set shape "bee"
     set color red
     set speed random-float 40
-
     ]
   create-queens 1 [
     fd random-float 4 ; let bees spread out from the center
@@ -146,7 +145,7 @@ to setup-bees
     set speed random-float 60
     set size 3
   ]
-  create-scouts 350 [
+  create-scouts 500 [
     fd random-float 4 ; let bees spread out from the center
     set my-home patch-here
     set shape "bee"
@@ -160,8 +159,9 @@ to setup-bees
     set next-task watch-dance-task
     set task-string "watching-dance"
 
-    set born-chance 35
+    set born-chance 80
   ]
+
   ; assigning some of the scouts to be initial scouts.
   ; bee-timer here determines how long they will wait
   ; before starting initial exploration
@@ -170,8 +170,12 @@ to setup-bees
     set bee-timer random 100
   ]
 
+
+  set population (scout-bees + count zanganos + count queens)
+  set next-turtle (population + 1)
+
   ask scouts [
-    ifelse who < 162
+    ifelse who < population
   [
     set alive? true
     set hidden? false
@@ -183,9 +187,6 @@ to setup-bees
 
     set bee-life random 400 + 200
   ]
-
-  set population count scouts + count zanganos + count queens
-  set next-turtle (population + 1)
 end
 
 
@@ -546,20 +547,19 @@ to go
     [
       set alive? false
       set hidden? true
+      if hidden? [ print "[debug] Bee deed" ]
       set population (population - 1)
     ]
-    if who = next-turtle
+    if who = next-turtle and 300 < ticks
     [
-      print who
       if born-chance < random 100
       [
         set bee-life (bee-life + ticks)
         set alive? true
         set hidden? false
-        if hidden? [print "se muestra"]
         set next-turtle (next-turtle + 1)
         set population (population + 1)
-        print "[debug] New bee"
+        print "[debug] Bee borned"
       ]
     ]
   ]
@@ -842,7 +842,7 @@ simulation-ticks
 simulation-ticks
 1000
 2500
-1100
+2500
 100
 1
 NIL
@@ -890,7 +890,7 @@ scout-bees
 scout-bees
 20
 50
-35
+40
 5
 1
 NIL
@@ -903,9 +903,9 @@ SLIDER
 333
 drone-bees
 drone-bees
-2
 10
-4
+40
+10
 2
 1
 NIL
