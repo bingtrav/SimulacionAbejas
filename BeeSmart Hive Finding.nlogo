@@ -1,7 +1,7 @@
 breed [ sites site ]
 breed [ scouts scout ]
 breed [ zanganos zangano]
-breed [queens queen]
+breed [ queens queen ]
 
 sites-own [
   quality discovered?
@@ -34,6 +34,7 @@ scouts-own [
                    ;   a bee which direction to turn.
   temp-x-dance     ; initial position of a dance
   temp-y-dance
+  bee-life         ; a timer keeping track of the length of its current life
   hungry
 ]
 zanganos-own[
@@ -71,6 +72,9 @@ globals [
   take-off-task
   resources ;Resource
   resource-plus
+
+  population       ; It counts how many bees are
+  simulation-ticks ; It contains how many ticks will have the simulation
 ]
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -78,6 +82,7 @@ globals [
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 to setup
   clear-all
+  setup-simulation
   setup-hives
   setup-tasks
   setup-bees
@@ -110,10 +115,13 @@ to setup-hives
       set quality item i quality-list
       set label quality
     ]
-
-
     set i i + 1
   ]
+end
+
+to setup-simulation
+  set population count scouts
+  set simulation-ticks simulation-number
 end
 
 to setup-bees
@@ -131,7 +139,6 @@ to setup-bees
     set next-task watch-dance-task
     set task-string "watching-dance"
   ]
-
   create-zanganos 50 [
     fd random-float 4 ; let bees spread out from the center
     set my-home patch-here
@@ -154,7 +161,9 @@ to setup-bees
   ask n-of (initial-percentage) scouts [
     set initial-scout? true
     set bee-timer random 100
+    set bee-life random 1000 + 200
   ]
+  set population count scouts + count zanganos + count queens
 end
 
 
@@ -346,7 +355,6 @@ to go-home
           set next-task pipe-task
           set task-string "piping"
           set bee-timer 20
-
         ] [
           ; if it didn't see enough bees on the target site,
           ; it prepares to dance to advocate it. it resets
@@ -574,7 +582,6 @@ to move-circle
   rt speed / 50
 end
 
-
 to show-hide-dance-path
   if show-dance-path? [
     clear-drawing
@@ -625,9 +632,9 @@ ticks
 
 BUTTON
 5
-190
+210
 201
-226
+246
 Setup
 setup
 NIL
@@ -642,9 +649,9 @@ NIL
 
 BUTTON
 5
-235
+255
 200
-275
+295
 Go
 go
 T
@@ -666,7 +673,7 @@ hive-number
 hive-number
 4
 10
-10
+7
 1
 1
 NIL
@@ -790,9 +797,9 @@ HORIZONTAL
 
 PLOT
 940
-220
+210
 1250
-415
+405
 Resources
 Time
 Honey
@@ -805,6 +812,39 @@ false
 "" ""
 PENS
 "default" 1.0 0 -16777216 true "" "plot resources"
+
+SLIDER
+5
+170
+202
+203
+simulation-number
+simulation-number
+1000
+2500
+1700
+100
+1
+NIL
+HORIZONTAL
+
+PLOT
+940
+410
+1250
+575
+Population
+Time
+Bees
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot population"
 
 @#$#@#$#@
 ## WHAT IS IT?
