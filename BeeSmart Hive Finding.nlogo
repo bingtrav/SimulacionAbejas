@@ -710,7 +710,7 @@ PLOT
 10
 1250
 205
-watching v.s. working
+Buscadoras vs Recolectoras
 NIL
 NIL
 0.0
