@@ -93,7 +93,7 @@ to setup
   setup-bees
   set show-dance-path? false
   set scouts-visible? true
-  set resources 0
+  set resources resources-units
   set resource-plus 3
   reset-ticks
 end
@@ -125,7 +125,8 @@ to setup-hives
 end
 
 to setup-simulation
-  set population count scouts
+  set population (scout-bees + count zanganos + count queens)
+  set next-turtle (population + 1)
   set simulation-number simulation-ticks
 end
 
@@ -170,10 +171,6 @@ to setup-bees
     set bee-timer random 100
   ]
 
-
-  set population (scout-bees + count zanganos + count queens)
-  set next-turtle (population + 1)
-
   ask scouts [
     ifelse who < population
   [
@@ -185,7 +182,7 @@ to setup-bees
     set hidden? true
   ]
 
-    set bee-life random 400 + 200
+    set bee-life random 400 + 300
   ]
 end
 
@@ -543,29 +540,31 @@ to go
   tick
 
   ask scouts [
-    if alive? and bee-life < ticks
+    if alive? and ticks mod 50 = 0 [ set resources (resources - 1)]
+    if alive? and bee-life < ticks and 5 < random 100
     [
       set alive? false
       set hidden? true
-      if hidden? [ print "[debug] Bee deed" ]
+      ; if hidden? [ print "[debug] Bee deed" ]
       set population (population - 1)
     ]
     if who = next-turtle and 300 < ticks
     [
-      if born-chance < random 100
+      if ticks mod 10 = 0 and random 100 < born-chance
       [
         set bee-life (bee-life + ticks)
         set alive? true
         set hidden? false
         set next-turtle (next-turtle + 1)
         set population (population + 1)
-        print "[debug] Bee borned"
+        ; print "[debug] Bee borned"
       ]
     ]
   ]
 
   if (simulation-number - 1) < ticks [
     print "[debug] STOP SIMULATION"
+    print word "Population: " population
     stop
   ]
 end
@@ -687,9 +686,9 @@ ticks
 
 BUTTON
 10
-370
+355
 206
-406
+391
 Setup
 setup
 NIL
@@ -704,9 +703,9 @@ NIL
 
 BUTTON
 10
-415
+400
 205
-455
+440
 Go
 go
 T
@@ -728,7 +727,7 @@ hive-number
 hive-number
 4
 10
-6
+8
 1
 1
 NIL
@@ -741,10 +740,10 @@ SLIDER
 93
 initial-percentage
 initial-percentage
-5
-25
-12
-1
+10
+30
+20
+2
 1
 NIL
 HORIZONTAL
@@ -776,8 +775,8 @@ SLIDER
 initial-explore-time
 initial-explore-time
 100
-300
 200
+150
 10
 1
 NIL
@@ -785,9 +784,9 @@ HORIZONTAL
 
 BUTTON
 10
-465
+450
 205
-505
+490
 Show/Hide Dance Path
 show-hide-dance-path
 NIL
@@ -840,9 +839,9 @@ SLIDER
 213
 simulation-ticks
 simulation-ticks
-1000
-2500
-2500
+2000
+5000
+3000
 100
 1
 NIL
@@ -873,9 +872,9 @@ SLIDER
 253
 resources-units
 resources-units
-100
-500
-200
+3000
+8000
+4000
 5
 1
 NIL
@@ -890,7 +889,7 @@ scout-bees
 scout-bees
 20
 50
-40
+45
 5
 1
 NIL
@@ -905,7 +904,7 @@ drone-bees
 drone-bees
 10
 40
-10
+16
 2
 1
 NIL
