@@ -548,8 +548,10 @@ to go
       ; if hidden? [ print "[debug] Bee deed" ]
       set population (population - 1)
     ]
+    ; Hace que las abejas puedan nacer hasta despues de los primeros 300 ticks.
     if who = next-turtle and 300 < ticks
     [
+      ; Revisa si se puede dar el nacimiento de una abeja con respecto al porcentaje de que nazca en ese mismo instante.
       if ticks mod 10 = 0 and random 100 < born-chance
       [
         set bee-life (bee-life + ticks)
